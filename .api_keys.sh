@@ -1,0 +1,6 @@
+#!/bin/zsh
+
+export SPOTIFY_CLIENT_ID=e664258c50954a6181ad6bb405e87e19
+export SPOTIFY_CLIENT_SECRET=4ac8cd0a61b140388882719f6b1c9765
+
+echo "Added Client ID and SECRET"
