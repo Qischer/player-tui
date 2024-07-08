@@ -1,5 +1,12 @@
 package player
 
+//ID and Secret
+type SpotifyKeys struct {
+  ClientID      string    `yaml:"client_id"`
+  ClientSecret  string    `yaml:"client_secret"`
+  RefreshToken  string    `yaml:"refresh_token"`
+}
+
 //ERROR types 
 type ErrorResponse struct {
   Error             string  `json:"error"`
@@ -20,6 +27,12 @@ type AccessResponse struct {
   Scope          string `json:"scope"` 
   ExpiresIn      int64  `json:"expires_in"`
   RefreshToken   string `json:"refresh_token"`
+}
+
+type AccessRequest struct {
+  GrantType     string
+  AuthCode      string
+  RefreshToken  string
 }
 
 //Content
