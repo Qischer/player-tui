@@ -105,15 +105,14 @@ func (h *Handlers) HandleGetState(w http.ResponseWriter, r *http.Request) {
     log.Fatal(err)
   }
 
+  if res.StatusCode == http.StatusNoContent {
+    w.WriteHeader(http.StatusNoContent)
+    return
+  }
+
   if res.StatusCode != http.StatusOK {
     errPost := ApiError{}
     e := json.NewDecoder(res.Body).Decode(&errPost)
-    
-    if e.Error() == "EOF" {
-      w.WriteHeader(400)
-      w.Write([]byte("No active player"))
-      return
-    }
 
     if e != nil {
       log.Fatal(e)
@@ -130,6 +129,7 @@ func (h *Handlers) HandleGetState(w http.ResponseWriter, r *http.Request) {
   }
 
   log.Info("Player State", "state", state)
+  w.WriteHeader(http.StatusOK)
   e = json.NewEncoder(w).Encode(state)
   if e != nil {
     log.Fatal(e)
