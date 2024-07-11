@@ -10,8 +10,43 @@ import (
   "os"
 
   log "github.com/charmbracelet/log"
+  yaml "gopkg.in/yaml.v3"
 )
 
+//Initialize Server
+func StartServer() {
+  log.SetLevel(log.DebugLevel)
+  log.Info("Run TUI")
+
+  //Get access codes
+  f, err := os.ReadFile(".env.yaml")
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  m := SpotifyKeys{}
+  err = yaml.Unmarshal(f, &m)
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  os.Setenv("SPOTIFY_CLIENT_ID", m.ClientID)
+  os.Setenv("SPOTIFY_CLIENT_SECRET", m.ClientSecret)
+  os.Setenv("SPOTIFY_REFRESH_TOKEN", m.RefreshToken)
+
+  router := http.NewServeMux()
+  LoadRoutes(router)
+
+  server := http.Server{
+    Addr: ":6969",
+    Handler: router,
+  }
+
+  log.Info("Listening on port 6969")
+  server.ListenAndServe()
+}
+
+//Request Functions
 func (a *AccessRequest) MakeRequest() (AccessResponse, error) {
   u := &url.URL{
     Scheme: "https",

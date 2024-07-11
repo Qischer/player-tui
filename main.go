@@ -1,53 +1,24 @@
 package main
 
 import (
-  "Qischer/player-tui/internal/player"
-  "net/http"
-  "os"
-  "os/signal"
-  "syscall"
+	"Qischer/player-tui/internal/player"
+	"os"
+	"os/signal"
+	"syscall"
 
-  log "github.com/charmbracelet/log"
-  "gopkg.in/yaml.v3"
+	log "github.com/charmbracelet/log"
+	yaml "gopkg.in/yaml.v3"
 )
 
-func run() {
-  log.SetLevel(log.DebugLevel)
-  log.Info("Run Player TUI")
-
-  //Get access codes
-  f, err := os.ReadFile(".env.yaml")
-  if err != nil {
-    log.Fatal(err)
-  }
-
-  m := player.SpotifyKeys{}
-  err = yaml.Unmarshal(f, &m)
-  if err != nil {
-    log.Fatal(err)
-  }
-
-  os.Setenv("SPOTIFY_CLIENT_ID", m.ClientID)
-  os.Setenv("SPOTIFY_CLIENT_SECRET", m.ClientSecret)
-  os.Setenv("SPOTIFY_REFRESH_TOKEN", m.RefreshToken)
-
-  router := http.NewServeMux()
-  player.LoadRoutes(router)
-
-  server := http.Server{
-    Addr: ":6969",
-    Handler: router,
-  }
-
-  log.Info("Listening on port 6969")
-  server.ListenAndServe()
-}
-
-func preclose() {
+func preClose() {
   m := &player.SpotifyKeys{
     ClientID: os.Getenv("SPOTIFY_CLIENT_ID"),
     ClientSecret: os.Getenv("SPOTIFY_CLIENT_SECRET"),
     RefreshToken: os.Getenv("SPOTIFY_REFRESH_TOKEN"),
+  }
+
+  if m.ClientID == "" {
+    log.Fatal("Premature Exit. Prevented api key clear")
   }
 
   out, err := yaml.Marshal(m)
@@ -63,16 +34,20 @@ func preclose() {
   log.Debug("Saved to yaml file")
 }
 
-func main() { 
+func runTUI() {
+  //tui.main()
+}
 
+func main() { 
   c := make(chan os.Signal, 1)
   signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
-  go run()
+  go player.StartServer()
+  //tui.Main()
 
   <-c 
 
-  preclose()
+  preClose()
   log.Info("Goodbye!")
   os.Exit(0)
 

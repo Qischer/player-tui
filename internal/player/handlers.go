@@ -10,7 +10,7 @@ import (
 	log "github.com/charmbracelet/log"
 )
 
-var (
+const (
   SCOPE = "user-read-playback-state"
   REDIRECT_URI = "http://localhost:6969/callback"
 )
