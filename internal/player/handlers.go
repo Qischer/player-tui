@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+  "log"
 
-	log "github.com/charmbracelet/log"
 )
 
 const (
@@ -18,13 +18,13 @@ const (
 type Handlers struct {}
 
 func (h *Handlers) HandleIndex(w http.ResponseWriter, r *http.Request) {
-  log.Info("Request Made", "method", r.Method, "path", r.URL.Path)
+  log.Println("Request Made", "method", r.Method, "path", r.URL.Path)
   w.WriteHeader(http.StatusOK)
   w.Write([]byte("Hi there, Listener!!"))
 }
 
 func (h *Handlers) HandleAuth(w http.ResponseWriter, r *http.Request) {
-  log.Info("Request:", r.Method, r.URL.Path)
+  log.Println("Request:", r.Method, r.URL.Path)
   w.Write([]byte("You will be redirected to Spotify\n"))
 
   q := make(url.Values)
@@ -54,14 +54,13 @@ func (h *Handlers) HandleCallback(w http.ResponseWriter, r *http.Request) {
 
   access, err := req.MakeRequest()
   if err != nil {
-    log.Error(err)
+    log.Fatal(err)
   }
   
   os.Setenv("SPOTIFY_ACCESS_CODE", access.AccessToken)
   os.Setenv("SPOTIFY_REFRESH_TOKEN", access.RefreshToken)
 
-  log.Debug("Check code", "real", access.AccessToken, "env", os.Getenv("SPOTIFY_ACCESS_CODE"))
-  log.Info("Updated access_code and refresh_token to env")
+  log.Println("Updated access_code and refresh_token to env")
 }
 
 
@@ -83,14 +82,12 @@ func (h *Handlers) HandleGetState(w http.ResponseWriter, r *http.Request) {
 
     access, err := req.MakeRequest()
     if err != nil { 
-      log.Error(err)
+      log.Fatal(err)
     } 
     os.Setenv("SPOTIFY_ACCESS_CODE", access.AccessToken)
 
-    log.Info("Updated access_code to env") 
+    log.Println("Updated access_code to env") 
   }
-
-  log.Debug("Get player state", "access_code", os.Getenv("SPOTIFY_ACCESS_CODE")) 
 
   req, err := http.NewRequest("GET", u.String(), bytes.NewBuffer([]byte("")))
   if err != nil {
@@ -118,17 +115,17 @@ func (h *Handlers) HandleGetState(w http.ResponseWriter, r *http.Request) {
       log.Fatal(e)
     }
 
-    log.Error("Error Occured", "error", errPost)
+    log.Fatal("Error Occured", "error", errPost)
     return
   }
 
   state := &PlayerState{}
   e := json.NewDecoder(res.Body).Decode(state)
   if e != nil {
-    log.Error(e)
+    log.Fatal(e)
   }
 
-  log.Info("Player State", "state", state)
+  log.Println("Player State", "state", state)
   w.WriteHeader(http.StatusOK)
   e = json.NewEncoder(w).Encode(state)
   if e != nil {

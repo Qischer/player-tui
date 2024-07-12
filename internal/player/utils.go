@@ -8,44 +8,8 @@ import (
   "net/http"
   "net/url"
   "os"
-
-  log "github.com/charmbracelet/log"
-  yaml "gopkg.in/yaml.v3"
+  "log"
 )
-
-//Initialize Server
-func StartServer() {
-  log.SetLevel(log.DebugLevel)
-  log.Info("Run TUI")
-
-  //Get access codes
-  f, err := os.ReadFile(".env.yaml")
-  if err != nil {
-    log.Fatal(err)
-  }
-
-  m := SpotifyKeys{}
-  err = yaml.Unmarshal(f, &m)
-  if err != nil {
-    log.Fatal(err)
-  }
-
-  os.Setenv("SPOTIFY_CLIENT_ID", m.ClientID)
-  os.Setenv("SPOTIFY_CLIENT_SECRET", m.ClientSecret)
-  os.Setenv("SPOTIFY_REFRESH_TOKEN", m.RefreshToken)
-
-  router := http.NewServeMux()
-  LoadRoutes(router)
-
-  server := http.Server{
-    Addr: ":6969",
-    Handler: router,
-  }
-
-  log.Info("Listening on port 6969")
-  server.ListenAndServe()
-}
-
 //Request Functions
 func (a *AccessRequest) MakeRequest() (AccessResponse, error) {
   u := &url.URL{
@@ -59,12 +23,12 @@ func (a *AccessRequest) MakeRequest() (AccessResponse, error) {
 
   switch a.GrantType {
     case "authorization_code":     
-    log.Info("Request by Code")
+    log.Println("Request by Code")
     body.Add("grant_type", a.GrantType)
     body.Add("code", a.AuthCode)
     body.Add("redirect_uri", REDIRECT_URI)
   case "refresh_token":
-    log.Info("Request by Refresh Code")
+    log.Println("Request by Refresh Code")
     body.Add("grant_type", a.GrantType)
     body.Add("refresh_token", os.Getenv("SPOTIFY_REFRESH_TOKEN"))
     body.Add("client_id", os.Getenv("SPOTIFY_CLIENT_ID"))
@@ -97,7 +61,7 @@ func (a *AccessRequest) MakeRequest() (AccessResponse, error) {
       log.Fatal(e)
     }
 
-    log.Error("Authorization Error", "error", errPost.Error, "error description", errPost.ErrorDescription)
+    log.Println("Authorization Error", "error", errPost.Error, "error description", errPost.ErrorDescription)
     return *access, errors.New(errPost.Error)
   }
 
