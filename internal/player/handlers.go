@@ -132,6 +132,3 @@ func (h *Handlers) HandleGetState(w http.ResponseWriter, r *http.Request) {
     log.Fatal(e)
   }
 }
-
-
-

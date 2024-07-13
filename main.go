@@ -3,7 +3,6 @@ package main
 import (
 	"Qischer/player-tui/internal/player"
 	"Qischer/player-tui/internal/tui"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -13,8 +12,6 @@ import (
 )
 
 func startServer(q chan struct{}) {
-  fmt.Println("Run TUI")
-
   //Get access codes
   f, err := os.ReadFile(".env.yaml")
   if err != nil {
@@ -68,10 +65,6 @@ func preclose() {
   }
 
   log.Println("Saved to yaml file")
-}
-
-func runTUI() {
-  //tui.main()
 }
 
 func main() { 
