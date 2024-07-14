@@ -66,6 +66,8 @@ func (h *Handlers) HandleCallback(w http.ResponseWriter, r *http.Request) {
 
 
 func (h *Handlers) HandleGetState(w http.ResponseWriter, r *http.Request) {
+  log.Println("Request player state")
+
   u := &url.URL{
     Scheme: "https",
     Host: "api.spotify.com",

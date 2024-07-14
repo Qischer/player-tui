@@ -22,7 +22,7 @@ func (a *AccessRequest) MakeRequest() (AccessResponse, error) {
   body := make(url.Values)
 
   switch a.GrantType {
-    case "authorization_code":     
+  case "authorization_code":     
     log.Println("Request by Code")
     body.Add("grant_type", a.GrantType)
     body.Add("code", a.AuthCode)
