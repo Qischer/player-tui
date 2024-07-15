@@ -7,15 +7,51 @@ import (
 	"log"
 	"net/http"
 	"time"
+  "os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	yaml "gopkg.in/yaml.v3"
 )
+
+const url = "http://localhost:6969/player/state"
 
 func parseTime(ms int) string {
   m := int((ms/ 1000) / 60)
   s := int((ms/ 1000) % 60)
 
   return fmt.Sprintf("%d:%2d", m, s)
+}
+
+func startServer(q chan struct{}) {
+  //Get access codes
+  f, err := os.ReadFile(".env.yaml")
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  m := player.SpotifyKeys{}
+  err = yaml.Unmarshal(f, &m)
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  os.Setenv("SPOTIFY_CLIENT_ID", m.ClientID)
+  os.Setenv("SPOTIFY_CLIENT_SECRET", m.ClientSecret)
+  os.Setenv("SPOTIFY_REFRESH_TOKEN", m.RefreshToken)
+
+  router := http.NewServeMux()
+  player.LoadRoutes(router)
+
+  server := http.Server{
+    Addr: ":6969",
+    Handler: router,
+  }
+
+  log.Println("Listening on port 6969")
+  if err := server.ListenAndServe(); err != nil {
+    log.Println(err)
+    close(q)
+  }
 }
 
 func reqState() tea.Msg {

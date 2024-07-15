@@ -80,7 +80,7 @@ func main() {
 
   go startServer(quit)
   // Create and start the Bubble Tea TUI
-  p := tea.NewProgram(tui.NewModel(), tea.WithAltScreen())
+  p := tea.NewProgram(tui.NewModel(quit), tea.WithAltScreen())
 
   // Run the TUI in a separate goroutine
   go func() {

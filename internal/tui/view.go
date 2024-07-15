@@ -4,12 +4,12 @@ import (
 	"Qischer/player-tui/internal/player"
 	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
-
-const url = "http://localhost:6969/player/state"
 
 type model struct {
   status  int 
@@ -18,8 +18,12 @@ type model struct {
   height  int
   state   player.PlayerState
 
+  //components
+  progress progress.Model
   //Styles 
   styles  *Styles
+
+  quit    chan struct{}
 }
 
 //Model messages
@@ -53,6 +57,7 @@ func (m model) Init() (tea.Cmd) {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+  time.Sleep(1 * time.Second)
   switch msg := msg.(type) {
   case tea.WindowSizeMsg:
     m.width = msg.Width
@@ -69,6 +74,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
   case tea.KeyMsg:
     switch msg.String() {
     case "ctrl+c","q":
+      close(m.quit)
       return m, tea.Quit
     }
   }
@@ -90,9 +96,10 @@ func (m model) View() string {
 
   end := parseTime(int(m.state.Item.Duration))
   cur := parseTime(int(m.state.ProgressMS)) 
+  bar := m.progress.ViewAs(float64(m.state.ProgressMS) / float64(m.state.Item.Duration))
 
   //time
-  ts := lipgloss.JoinHorizontal(lipgloss.Center, cur, "[status bar]", end)
+  ts := lipgloss.JoinHorizontal(lipgloss.Center, cur, bar, end)
   ui := lipgloss.JoinVertical(lipgloss.Center, s, ts)
   return lipgloss.Place(m.width, 
           m.height, 
@@ -102,7 +109,9 @@ func (m model) View() string {
         )
   }
 
-func NewModel() model{
+func NewModel(quit chan struct{}) model{ 
   styles := DefaultStyles()
-  return model{styles: styles}
+  prog := progress.New(progress.WithScaledGradient("#FF7CCB", "#FDFF8C"))
+  prog.ShowPercentage = false
+  return model{styles: styles, progress: prog, quit: quit}
 }

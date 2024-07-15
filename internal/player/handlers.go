@@ -3,11 +3,10 @@ package player
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
-  "log"
-
 )
 
 const (
@@ -68,15 +67,18 @@ func (h *Handlers) HandleCallback(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) HandleGetState(w http.ResponseWriter, r *http.Request) {
   log.Println("Request player state")
 
+  //last req time 
+  // lt := r.URL.Query().Get("prev")
+
   u := &url.URL{
     Scheme: "https",
     Host: "api.spotify.com",
     Path: "v1/me/player",
   }
   
-  accessTok := os.Getenv("SPOTIFY_ACCESS_CODE")
+  atok := os.Getenv("SPOTIFY_ACCESS_CODE")
   
-  if accessTok == "" {
+  if atok == "" {
     req := &AccessRequest{
       GrantType: "refresh_token",
       RefreshToken: os.Getenv("SPOTIFY_REFRESH_TOKEN"),
