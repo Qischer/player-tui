@@ -4,6 +4,7 @@ import (
 	"Qischer/player-tui/internal/player"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/progress"
@@ -23,6 +24,8 @@ type model struct {
   //Styles 
   styles  *Styles
 
+  //server 
+  last    int64
   quit    chan struct{}
 }
 
@@ -32,6 +35,7 @@ type statusMsg struct{
   state player.PlayerState
 }
 
+type waitMsg struct{}
 type errMsg struct{err error}
 
 //Styling
@@ -40,24 +44,29 @@ type Styles struct {
   PlayerBox   lipgloss.Style
 }
 
+const (
+  padding = 2;
+)
+
 func (e errMsg) Error() string { return e.err.Error() }
 
 func DefaultStyles() *Styles {
   s := &Styles{}
   s.BorderColor = lipgloss.Color("201")
   s.PlayerBox = lipgloss.NewStyle().
-        BorderForeground(s.BorderColor).
-        BorderStyle(lipgloss.RoundedBorder()).
-        Padding(3).Width(80)
+          BorderForeground(s.BorderColor).
+          BorderStyle(lipgloss.RoundedBorder()).
+          Align(lipgloss.Center).
+          Padding(3).Width(80)
   return s
 }
 
 func (m model) Init() (tea.Cmd) {
-  return reqState
+  go startServer(m.quit)
+  return updatePlayerState(0)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-  time.Sleep(1 * time.Second)
   switch msg := msg.(type) {
   case tea.WindowSizeMsg:
     m.width = msg.Width
@@ -66,9 +75,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
   case statusMsg:
     m.status = msg.code
     m.state = msg.state
-    return m, reqState
+    m.last = time.Now().UnixMilli()
+    return m, updatePlayerState(m.last)
 
-  case errMsg: m.err = msg
+  case waitMsg:
+    return m, updatePlayerState(m.last)
+
+  case errMsg:
+    m.err = msg
     return m, nil
 
   case tea.KeyMsg:
@@ -78,11 +92,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       return m, tea.Quit
     }
   }
-  return m, reqState
+
+  return m, nil
 }
 
 func (m model) View() string {
   m.styles = DefaultStyles()
+  pad := strings.Repeat(" ", padding)
 
   if m.err != nil { 
     return "An error occurred"
@@ -99,19 +115,23 @@ func (m model) View() string {
   bar := m.progress.ViewAs(float64(m.state.ProgressMS) / float64(m.state.Item.Duration))
 
   //time
-  ts := lipgloss.JoinHorizontal(lipgloss.Center, cur, bar, end)
-  ui := lipgloss.JoinVertical(lipgloss.Center, s, ts)
+  ts := lipgloss.JoinHorizontal(lipgloss.Center, cur, pad, bar, pad, end)
+  vui := lipgloss.JoinVertical(lipgloss.Center, s, ts)
+  hui := lipgloss.JoinHorizontal(lipgloss.Center, vui)
   return lipgloss.Place(m.width, 
-          m.height, 
-          lipgloss.Center, 
-          lipgloss.Center, 
-          m.styles.PlayerBox.Render(ui),
-        )
-  }
+      m.height, 
+      lipgloss.Center, 
+      lipgloss.Center, 
+      m.styles.PlayerBox.Render(hui),
+  )
+}
 
 func NewModel(quit chan struct{}) model{ 
   styles := DefaultStyles()
+  
   prog := progress.New(progress.WithScaledGradient("#FF7CCB", "#FDFF8C"))
   prog.ShowPercentage = false
+  prog.Width = 60
+
   return model{styles: styles, progress: prog, quit: quit}
 }

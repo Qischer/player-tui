@@ -19,7 +19,7 @@ func parseTime(ms int) string {
   m := int((ms/ 1000) / 60)
   s := int((ms/ 1000) % 60)
 
-  return fmt.Sprintf("%d:%2d", m, s)
+  return fmt.Sprintf("%d:%02d", m, s)
 }
 
 func startServer(q chan struct{}) {
@@ -54,27 +54,39 @@ func startServer(q chan struct{}) {
   }
 }
 
-func reqState() tea.Msg {
-  //http Client
-  time.Sleep(1 * time.Second)
+func updatePlayerState(last int64) tea.Cmd {
 
-  c := &http.Client{}
-  res, err := c.Get(url)
-  if err != nil {
-    log.Println(err)
-    return errMsg{err}
-  }
+  del := time.Now().UnixMilli() - last
 
-  //get res body 
-  state := &player.PlayerState{}
-  if res.StatusCode == http.StatusOK {
-    if e:= json.NewDecoder(res.Body).Decode(state); e != nil {
-      log.Fatal(e)
+  if del <= 1 {
+    return func() tea.Msg {
+      return waitMsg{}
     }
   }
-  
-  return statusMsg{
-    code: res.StatusCode,
-    state: *state,
-  } 
+
+  return func() tea.Msg {
+    //http Client
+    time.Sleep(1 * time.Second)
+
+    c := &http.Client{}
+    res, err := c.Get(url)
+    if err != nil {
+      log.Println(err)
+      return errMsg{err}
+    }
+
+    //get res body 
+    state := &player.PlayerState{}
+    if res.StatusCode == http.StatusOK {
+      if e:= json.NewDecoder(res.Body).Decode(state); e != nil {
+        log.Fatal(e)
+      }
+    }
+
+    return statusMsg{
+      code: res.StatusCode,
+      state: *state,
+    } 
+
+  }
 }
