@@ -44,4 +44,10 @@ type PlayerState struct {
 type TrackObject struct {
   Name      string    `json:"name"`
   Duration  int64     `json:"duration_ms"`
+  Artists   []Artist  `json:"artists"`
 }
+
+type Artist struct {
+  Name      string    `json:"name"`
+}
+

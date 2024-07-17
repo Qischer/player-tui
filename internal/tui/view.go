@@ -57,7 +57,7 @@ func DefaultStyles() *Styles {
           BorderForeground(s.BorderColor).
           BorderStyle(lipgloss.RoundedBorder()).
           Align(lipgloss.Center).
-          Padding(3).Width(80)
+          Padding(2).Width(80)
   return s
 }
 
@@ -108,7 +108,8 @@ func (m model) View() string {
     return "Player not active"
   }
 
-  s := fmt.Sprintf("Playing : %v\n", m.state.Item.Name)
+  a := printArtists(m.state.Item.Artists)
+  s := fmt.Sprintf("\033[1m%v\033[0m\n\033[90m%v\033[0m\n", m.state.Item.Name, a)
 
   end := parseTime(int(m.state.Item.Duration))
   cur := parseTime(int(m.state.ProgressMS)) 

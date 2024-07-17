@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
   "os"
+  "strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	yaml "gopkg.in/yaml.v3"
@@ -20,6 +21,15 @@ func parseTime(ms int) string {
   s := int((ms/ 1000) % 60)
 
   return fmt.Sprintf("%d:%02d", m, s)
+}
+
+func printArtists(a []player.Artist) string {
+  sarr := []string{}
+  for _, artist := range a {
+    sarr = append(sarr , artist.Name)
+  }
+
+  return strings.Join(sarr, ", ")
 }
 
 func startServer(q chan struct{}) {
