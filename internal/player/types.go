@@ -15,7 +15,7 @@ type ErrorResponse struct {
 
 type ApiError struct {
   Error struct{
-    Status  int64  `json:"status"`
+    Status  int    `json:"status"`
     Message string `json:"message"`
   } `json:"error"`
 }
@@ -37,8 +37,9 @@ type AccessRequest struct {
 
 //Content
 type PlayerState struct {
-  ProgressMS int64        `json:"progress_ms"`
-  Item       TrackObject  `json:"item"`
+  IsPlaying   bool         `json:"is_playing"`
+  ProgressMS  int64        `json:"progress_ms"`
+  Item        TrackObject  `json:"item"`
 }
 
 type TrackObject struct {

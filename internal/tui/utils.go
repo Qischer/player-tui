@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+  "net/url"
 	"time"
   "os"
   "strings"
@@ -14,7 +15,6 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
-const url = "http://localhost:6969/player/state"
 
 func parseTime(ms int) string {
   m := int((ms/ 1000) / 60)
@@ -32,7 +32,7 @@ func printArtists(a []player.Artist) string {
   return strings.Join(sarr, ", ")
 }
 
-func startServer(q chan struct{}) {
+func StartServer(q chan struct{}) {
   //Get access codes
   f, err := os.ReadFile(".env.yaml")
   if err != nil {
@@ -65,7 +65,7 @@ func startServer(q chan struct{}) {
 }
 
 func updatePlayerState(last int64) tea.Cmd {
-
+  const u = "http://localhost:6969/player/state"
   del := time.Now().UnixMilli() - last
 
   if del <= 1 {
@@ -79,7 +79,7 @@ func updatePlayerState(last int64) tea.Cmd {
     time.Sleep(1 * time.Second)
 
     c := &http.Client{}
-    res, err := c.Get(url)
+    res, err := c.Get(u)
     if err != nil {
       log.Println(err)
       return errMsg{err}
@@ -99,4 +99,31 @@ func updatePlayerState(last int64) tea.Cmd {
     } 
 
   }
+}
+
+func togglePlayback(p bool, last int64) tea.Cmd {
+  var link string
+  if p {
+    link = "http://localhost:6969/player/pause"
+  } else {
+    link = "http://localhost:6969/player/play"
+  }
+
+  up, err := url.Parse(link)
+  if err != nil {
+    log.Fatal(err)
+  }
+  
+  req := &http.Request{
+    Method: "PUT",
+    URL: up,
+  }
+
+  c := &http.Client{}
+  _, er := c.Do(req)
+  if er != nil {
+    log.Fatal(er)
+  }
+
+  return updatePlayerState(last)
 }

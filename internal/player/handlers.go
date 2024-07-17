@@ -10,7 +10,7 @@ import (
 )
 
 const (
-  SCOPE = "user-read-playback-state"
+  SCOPE = "user-read-playback-state user-modify-playback-state"
   REDIRECT_URI = "http://localhost:6969/callback"
 )
 
@@ -67,9 +67,6 @@ func (h *Handlers) HandleCallback(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) HandleGetState(w http.ResponseWriter, r *http.Request) {
   log.Println("Request player state")
 
-  //last req time 
-  // lt := r.URL.Query().Get("prev")
-
   u := &url.URL{
     Scheme: "https",
     Host: "api.spotify.com",
@@ -119,7 +116,6 @@ func (h *Handlers) HandleGetState(w http.ResponseWriter, r *http.Request) {
       log.Fatal(e)
     }
 
-    log.Fatal("Error Occured", "error", errPost)
     return
   }
 
@@ -135,4 +131,95 @@ func (h *Handlers) HandleGetState(w http.ResponseWriter, r *http.Request) {
   if e != nil {
     log.Fatal(e)
   }
+}
+
+func (h* Handlers) HandlePlay(w http.ResponseWriter, r *http.Request) {
+  u := &url.URL{
+    Scheme: "https",
+    Host: "api.spotify.com",
+    Path: "v1/me/player/play",
+  }
+  
+  atok := os.Getenv("SPOTIFY_ACCESS_CODE")
+  
+  if atok == "" {
+    req := &AccessRequest{
+      GrantType: "refresh_token",
+      RefreshToken: os.Getenv("SPOTIFY_REFRESH_TOKEN"),
+    } 
+
+    access, err := req.MakeRequest()
+    if err != nil { 
+      log.Fatal(err)
+    } 
+    os.Setenv("SPOTIFY_ACCESS_CODE", access.AccessToken)
+
+    log.Println("Updated access_code to env") 
+  }
+
+  req, err := http.NewRequest("PUT", u.String(), bytes.NewBuffer([]byte("")))
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  req.Header.Add("Authorization", "Bearer " + os.Getenv("SPOTIFY_ACCESS_CODE"))
+
+  client := &http.Client{}
+  res, err := client.Do(req)
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  if res.StatusCode != http.StatusOK {
+    e:= json.NewDecoder(res.Body).Decode(&ApiError{})
+    log.Fatal(res.StatusCode, e)
+  }
+
+  log.Println(res.StatusCode, "Play Player")
+}
+
+func (h* Handlers) HandlePause(w http.ResponseWriter, r *http.Request) {
+  u := &url.URL{
+    Scheme: "https",
+    Host: "api.spotify.com",
+    Path: "v1/me/player/pause",
+  }
+  
+  atok := os.Getenv("SPOTIFY_ACCESS_CODE")
+  
+  if atok == "" {
+    req := &AccessRequest{
+      GrantType: "refresh_token",
+      RefreshToken: os.Getenv("SPOTIFY_REFRESH_TOKEN"),
+    } 
+
+    access, err := req.MakeRequest()
+    if err != nil { 
+      log.Fatal(err)
+    } 
+    os.Setenv("SPOTIFY_ACCESS_CODE", access.AccessToken)
+
+    log.Println("Updated access_code to env") 
+  }
+
+  req, err := http.NewRequest("PUT", u.String(), bytes.NewBuffer([]byte("")))
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  req.Header.Add("Authorization", "Bearer " + os.Getenv("SPOTIFY_ACCESS_CODE"))
+
+  client := &http.Client{}
+  res, err := client.Do(req)
+  if err != nil {
+    log.Fatal(err)
+  }
+  
+  defer res.Body.Close()
+
+  if res.StatusCode != http.StatusOK {
+    e:= json.NewDecoder(res.Body).Decode(&ApiError{})
+    log.Fatal(res.StatusCode, e)
+  }
+  log.Println(res.StatusCode, "Pause Player")
 }

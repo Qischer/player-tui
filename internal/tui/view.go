@@ -3,6 +3,7 @@ package tui
 import (
 	"Qischer/player-tui/internal/player"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -52,7 +53,7 @@ func (e errMsg) Error() string { return e.err.Error() }
 
 func DefaultStyles() *Styles {
   s := &Styles{}
-  s.BorderColor = lipgloss.Color("201")
+  s.BorderColor = lipgloss.Color("#FF7CCB")
   s.PlayerBox = lipgloss.NewStyle().
           BorderForeground(s.BorderColor).
           BorderStyle(lipgloss.RoundedBorder()).
@@ -62,7 +63,7 @@ func DefaultStyles() *Styles {
 }
 
 func (m model) Init() (tea.Cmd) {
-  go startServer(m.quit)
+  go StartServer(m.quit)
   return updatePlayerState(0)
 }
 
@@ -90,6 +91,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     case "ctrl+c","q":
       close(m.quit)
       return m, tea.Quit
+    case " ":
+      //log.Println("Play/Pause")
+      return m, togglePlayback(m.state.IsPlaying, m.last)
+
+    case "n":
+      log.Println("Next")
+      return m, updatePlayerState(m.last)
+ 
+    case "p":
+      log.Println("Prev")
+      return m, updatePlayerState(m.last)
     }
   }
 

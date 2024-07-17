@@ -36,17 +36,20 @@ func preclose() {
 
 func main() { 
   quit := make(chan struct{})
+  if len(os.Args) >= 2 && os.Args[1] == "-d" {
+    tui.StartServer(quit)
+    os.Exit(0)
+  }
+
   f, err := os.OpenFile("log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
   if err != nil {
     log.Fatal(err)
   }
 
   defer f.Close()
-
   log.SetOutput(f)
 
   p := tea.NewProgram(tui.NewModel(quit), tea.WithAltScreen())
-
   if _, err := p.Run(); err != nil {
     log.Println("Error running program:", err)
     close(quit) // Signal to stop the HTTP server
