@@ -8,11 +8,9 @@ import (
 	"net/http"
   "net/url"
 	"time"
-  "os"
   "strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	yaml "gopkg.in/yaml.v3"
 )
 
 
@@ -33,22 +31,6 @@ func printArtists(a []player.Artist) string {
 }
 
 func StartServer(q chan struct{}) {
-  //Get access codes
-  f, err := os.ReadFile(".env.yaml")
-  if err != nil {
-    log.Fatal(err)
-  }
-
-  m := player.SpotifyKeys{}
-  err = yaml.Unmarshal(f, &m)
-  if err != nil {
-    log.Fatal(err)
-  }
-
-  os.Setenv("SPOTIFY_CLIENT_ID", m.ClientID)
-  os.Setenv("SPOTIFY_CLIENT_SECRET", m.ClientSecret)
-  os.Setenv("SPOTIFY_REFRESH_TOKEN", m.RefreshToken)
-
   router := http.NewServeMux()
   player.LoadRoutes(router)
 
