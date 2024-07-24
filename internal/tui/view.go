@@ -10,6 +10,7 @@ import (
 
 	"Qischer/player-tui/internal/player"
 
+	"github.com/bep/debounce"
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -35,7 +36,12 @@ type model struct {
 	// Prompt
 	isPrompt bool
 	prompt   Prompt
+
+	// Utils
+	debouncer Debouncer
 }
+
+type Debouncer func(f func())
 
 // Model messages
 type statusMsg struct {
@@ -115,7 +121,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case " ":
 			// log.Println("Play/Pause")
-			return m, togglePlayback(m.state.IsPlaying, m.last)
+			m.debouncer(m.togglePlayback)
+			return m, updatePlayerState(m.last)
 
 		case "n":
 			log.Println("Next")
@@ -189,5 +196,7 @@ func NewModel(quit chan struct{}) model {
 	prog.ShowPercentage = false
 	prog.Width = 60
 
-	return model{styles: styles, progress: prog, quit: quit}
+	dboz := debounce.New(500 * time.Millisecond)
+
+	return model{styles: styles, progress: prog, quit: quit, debouncer: dboz}
 }

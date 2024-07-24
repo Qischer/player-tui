@@ -82,9 +82,9 @@ func updatePlayerState(last int64) tea.Cmd {
 	}
 }
 
-func togglePlayback(p bool, last int64) tea.Cmd {
+func (m model) togglePlayback() {
 	var link string
-	if p {
+	if m.state.IsPlaying {
 		link = "http://localhost:6969/player/pause"
 	} else {
 		link = "http://localhost:6969/player/play"
@@ -105,8 +105,6 @@ func togglePlayback(p bool, last int64) tea.Cmd {
 	if er != nil {
 		log.Fatal(er)
 	}
-
-	return updatePlayerState(last)
 }
 
 func getAuthLink() tea.Msg {
